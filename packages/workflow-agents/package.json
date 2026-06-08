@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Pattern 3 — the same shared agents, run as Render Workflow tasks (per-agent isolation, retries, traces).",
+  "description": "workflow-agents — the same shared agents, run as Render Workflow tasks (per-agent isolation, retries, traces).",
   "scripts": {
     "typecheck": "tsc --noEmit",
     "dev": "node --env-file-if-exists=.env --import tsx src/server.ts",

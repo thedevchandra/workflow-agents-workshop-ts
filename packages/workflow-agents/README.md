@@ -1,17 +1,13 @@
-# @workshop/workflow-agents
+# workflow-agents
 
-Pattern 3 — the shared code-review agent run on [Render Workflows](https://render.com/docs/workflows). The agent code is unchanged from Patterns 1 and 2 (it comes from [`@workshop/agent`](../../shared/agent)); the only difference is that each agent runs as its own Render `task()` — with per-agent isolation, retries, timeouts, and traces handled by the platform.
+The same code-review agent run on [Render Workflows](https://render.com/docs/workflows).
+The agent code is unchanged from `naive-agent` and `worker-agents` (it comes from
+[`@workshop/agent`](../../shared/agent)); the only difference is that each agent
+runs as its own Render `task()` — with isolation, retries, timeouts, and traces
+handled by the platform.
 
-## Architecture
-
-Two processes, defined in [`render.yaml`](render.yaml):
-
-| Process | Source | Role |
-|---------|--------|------|
-| **Gateway** (web service) | `src/server.ts` | Hono server: receives PR submissions / GitHub webhooks, dispatches workflow runs, serves the telemetry viewer. |
-| **Workflow service** | `src/workflow.ts` | Registers and executes the task graph; each workflow and agent runs as a Render task in its own container. |
-
-Within a run, a workflow is a tree of Render tasks:
+> Guided walkthrough: [docs/03-workflow-agents.md](../../docs/03-workflow-agents.md) ·
+> hands-on finale: [docs/04-author-a-task.md](../../docs/04-author-a-task.md)
 
 ```
 code-review (Render task)
@@ -23,25 +19,32 @@ code-review (Render task)
 └── judge         (Render task, isolated container)
 ```
 
-`src/agentTask.ts` is the entire bridge: it wraps a shared `Agent` as a Render `task()`. Everything else is plain TypeScript shared with the other patterns.
+- **Render primitives:** Web Service + **Workflows** + Postgres.
+- **What it unlocks:** managed queuing, retries/backoff, per-task compute, parallel
+  fan-out, and full traces in the Render Dashboard — none of which you write.
+- **What you now own:** nothing. [`src/agentTask.ts`](src/agentTask.ts), which wraps
+  a shared `Agent` as a `task()`, is the entire bridge; everything else is the plain
+  TypeScript shared with the other patterns.
 
-## Agents and workflows
+## Architecture
 
-- **Agents** are plain TypeScript, defined once in `@workshop/agent` (`securityReviewer`, `performanceReviewer`, `uxReviewer`, `judge`) and wrapped as tasks via `agentTask()`.
-- **Workflows** are auto-discovered from `src/workflows/` — each subfolder with an `index.ts` exporting a `task()` is registered; the folder name is the route.
+Two processes, defined in [`render.yaml`](render.yaml):
+
+| Process | Source | Role |
+|---|---|---|
+| **Gateway** (web service) | `src/server.ts` | Receives PR submissions / GitHub webhooks, dispatches workflow runs, serves the telemetry viewer. |
+| **Workflow service** | `src/workflow.ts` | Registers and runs the task graph; each workflow and agent runs in its own container. |
+
+Workflows are auto-discovered from `src/workflows/` — each subfolder with an
+`index.ts` that exports a `task()` is registered, and the folder name becomes the
+route. Two ship today:
 
 | Workflow | Description |
-|----------|-------------|
-| `code-review` | Multi-agent PR review: `prepareDiff → filterDiff → [security ‖ performance ‖ ux?] → judge`. Persists results to the shared telemetry store. |
-| `quick-review` | The author-a-task starter for the hands-on finale (see [`docs/04-author-a-task.md`](../../docs/04-author-a-task.md)). |
+|---|---|
+| `code-review` | Multi-agent PR review: `prepareDiff → filterDiff → [security ‖ performance ‖ ux?] → judge`. |
+| `quick-review` | The author-a-task starter for the hands-on finale (see [docs/04](../../docs/04-author-a-task.md)). |
 
-## Telemetry
-
-The gateway serves the **shared telemetry viewer** ([`@workshop/ui`](../../shared/ui)) at `/` — the same reviews table as Patterns 1 & 2, backed by [`@workshop/db`](../../shared/db), now including per-agent spans. Deep traces (isolation, retries, timeouts) also live in the **Render Dashboard**.
-
-`@workshop/db` uses an in-memory backend when `DATABASE_URL` is unset and Postgres when it is set, so local dev needs no database.
-
-## Local development
+## Run locally
 
 ```sh
 npm install                        # from the repo root
@@ -53,22 +56,27 @@ npm run dev --workspace @workshop/workflow-agents          # http://localhost:30
 npm run dev:workflows --workspace @workshop/workflow-agents
 ```
 
-No API key required — agents fall back to a mock model. Set `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` for real reviews.
-
-Trigger a code review:
+No API key required — agents fall back to a deterministic mock model. Set
+`ANTHROPIC_API_KEY` or `OPENAI_API_KEY` for real reviews, then trigger one:
 
 ```sh
 curl -s -X POST http://localhost:3000/api/reviews \
   -H 'content-type: application/json' -d '{"prUrl":"https://github.com/<owner>/<repo>/pull/<n>"}'
 ```
 
-Then open `http://localhost:3000/` for the reviews table. GitHub webhook setup is in [`docs/code-review-setup.md`](docs/code-review-setup.md). Authored workflows like `quick-review` are run via the Render CLI — see [`docs/04-author-a-task.md`](../../docs/04-author-a-task.md).
+Open `http://localhost:3000/` for the reviews table. GitHub webhook setup is in
+[docs/code-review-setup.md](../../docs/code-review-setup.md).
 
-## Deploying to Render
+## Deploy
 
-Deploy the Blueprint ([`render.yaml`](render.yaml)) — a web service + managed Postgres. Create the Workflow service separately in the Render Dashboard (see [`docs/03-workflow-agents.md`](../../docs/03-workflow-agents.md)). In production, `RENDER_USE_LOCAL_DEV=false` makes the gateway dispatch real Render Workflow tasks.
+Deploy the Blueprint ([`render.yaml`](render.yaml)) — a Web Service + managed
+Postgres — then create the Workflow service in the Render Dashboard (see
+[docs/03](../../docs/03-workflow-agents.md)). In production,
+`RENDER_USE_LOCAL_DEV=false` makes the gateway dispatch real Workflow tasks.
 
-## Layout
+## Reference
+
+**Layout**
 
 ```
 src/
@@ -77,36 +85,36 @@ src/
   agentTask.ts       wrap a shared Agent as a Render task()
   github.ts          GitHub webhook verify + match
   workflows/
-    loader.ts        auto-discovery
-    code-review/      the multi-agent review workflow
-    quick-review/     author-a-task starter (the finale)
+    loader.ts        workflow auto-discovery
+    code-review/     the multi-agent review workflow
+    quick-review/    author-a-task starter (the finale)
 ```
 
-## API
+**Routes**
 
 | Route | Description |
-|-------|-------------|
-| `POST /api/reviews` | Submit a code review by `{ prUrl }` (used by the viewer) |
-| `GET /` · `GET /api/reviews` · `GET /api/reviews/:id` | Telemetry viewer + its read APIs |
+|---|---|
+| `POST /api/reviews` | Submit a code review by `{ prUrl }` |
+| `GET /` · `/api/reviews` · `/api/reviews/:id` | Telemetry viewer + read APIs |
 | `POST /webhooks/github` | GitHub PR webhook → code review |
 | `GET /healthz` | Liveness check |
 
-## Environment
+**Environment**
 
 | Variable | Description |
-|----------|-------------|
+|---|---|
 | `RENDER_USE_LOCAL_DEV` | `true` runs tasks in-process (local dev) |
-| `DATABASE_URL` | Postgres for durable runs/reviews; falls back to in-memory |
-| `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` | Optional; without one, agents use a mock model |
+| `DATABASE_URL` | Postgres for durable runs; falls back to in-memory |
+| `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` | Optional; mock model if absent |
 | `WORKFLOW_API_KEY` | Bearer token protecting `POST /api/reviews` and `/webhooks/*` (open when unset) |
-| `GITHUB_WEBHOOK_SECRET` | HMAC secret for GitHub webhook verification |
-| `GITHUB_TOKEN` | Raises GitHub API rate limits / enables private repo diffs |
-| `RENDER_API_KEY` | Required in production for Render Workflow dispatch |
+| `GITHUB_WEBHOOK_SECRET` | HMAC secret for webhook verification |
+| `GITHUB_TOKEN` | Raises GitHub rate limits / enables private-repo diffs |
+| `RENDER_API_KEY` | Required in production for Workflow dispatch |
 
-## Scripts
+**Scripts**
 
 | Script | Description |
-|--------|-------------|
+|---|---|
 | `npm run dev` | Gateway on port 3000 (in-process tasks) |
 | `npm run dev:workflows` | Local Render task server + gateway |
 | `npm run start` | Production start (gateway) |

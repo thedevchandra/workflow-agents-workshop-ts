@@ -1,9 +1,7 @@
 /**
- * Consolidated contracts for the shared agent core.
- *
- * Lifted and trimmed from agent-orchestrator's type modules. Deliberately small:
- * a provider-agnostic model client, the message/content shapes the loop threads,
- * a tool contract, and a tracing contract for telemetry.
+ * The type contracts for the shared agent core. Deliberately small: a
+ * provider-agnostic model client, the message/content shapes the loop threads, a
+ * tool contract, and a tracing contract for telemetry.
  */
 
 // ── Model ────────────────────────────────────────────────────────────────────
@@ -187,8 +185,8 @@ export interface RunContext {
 
 /**
  * A runnable agent: a definition plus a substrate-agnostic `run()` that executes
- * the loop in-process. Patterns 1 & 2 call `run()` directly; Pattern 3 wraps it
- * in a Render `task()`. Build one with `defineAgent()`.
+ * the loop in-process. naive-agent and worker-agents call `run()` directly;
+ * workflow-agents wraps it in a Render `task()`. Build one with `defineAgent()`.
  */
 export interface Agent extends AgentDefinition {
   run(input: AgentInput, ctx?: RunContext): Promise<AgentResult>

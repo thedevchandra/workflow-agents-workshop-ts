@@ -9,7 +9,7 @@
 browser ─POST /api/reviews─▶ web (producer)
                                create review → XADD job to Valkey → return 202
 Valkey stream ─▶ worker (consumer)        [scale: run N workers]
-                  runReview()             ← byte-for-byte identical to Pattern 1
+                  runReview()             ← byte-for-byte identical to naive-agent
                   publish progress ─pub/sub─▶ web ─SSE─▶ browser
                   write telemetry → Postgres
 ```
@@ -19,6 +19,31 @@ Valkey stream ─▶ worker (consumer)        [scale: run N workers]
 - Queue + pub/sub: [`worker-agents/src/kv.ts`](../packages/worker-agents/src/kv.ts)
 
 The agent code did not change. Only *where it runs* did.
+
+## Exercise — write the ack semantics
+
+Before you run it, you implement the one piece that *is* the worker pattern.
+Open [`worker-agents/src/kv.ts`](../packages/worker-agents/src/kv.ts) and find
+`processEntry` — it currently throws. Your job: handle one delivered stream
+entry and decide whether to acknowledge it.
+
+The rule:
+
+- **Success** → `XACK` the message so the group never redelivers it.
+- **Failure** (handler throws) → **don't** ack. Log and return so the message
+  stays pending and gets retried. Don't let the error escape the loop.
+
+Verify with a local Valkey/Redis running:
+
+```sh
+REDIS_URL=redis://127.0.0.1:6379 npm run test:worker
+```
+
+Two tests go from red to green: one asserts a handled message is acked (leaves
+the pending list), the other asserts a failed handler leaves it pending.
+
+> Do this one by hand — it's a few lines, and feeling the acks/retries you own is
+> the whole point. You'll bring out coding agents in Session 2.
 
 ## Run it
 
@@ -46,9 +71,7 @@ Try these demos:
 
 Look at [`worker-agents/src/kv.ts`](../packages/worker-agents/src/kv.ts): the stream, the consumer group,
 blocking reads, acks, retry-on-failure (un-acked messages), and the pub/sub
-progress channel. It's not much — but it's all coordination code *you* now own and
-debug. There's no built-in trace of which agent ran where.
-
-That is precisely what Pattern 3 deletes.
+progress channel. It's all coordination code *you* now own and
+debug.
 
 Next: [03 — Workflow agents](03-workflow-agents.md).

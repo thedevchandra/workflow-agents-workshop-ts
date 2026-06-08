@@ -1,13 +1,13 @@
 /**
- * The code-review orchestration used by Patterns 1 & 2.
+ * The code-review orchestration used by naive-agent and worker-agents.
  *
  *   prepareDiff → filterDiff → [security ‖ performance ‖ ux?] (Promise.all) → judge
  *
  * The UX reviewer is conditionally branched in only when the diff touches
  * frontend files. Substrate-agnostic: it doesn't know whether it runs in a web
  * request or a queue worker. Progress is surfaced via the `onEvent` callback so a
- * worker can stream it over pub/sub. Pattern 3 expresses the same shape as Render
- * tasks.
+ * worker can stream it over pub/sub. workflow-agents expresses the same shape as
+ * Render tasks.
  */
 import { prepareDiff, type Patch } from './prepareDiff.js'
 import { filterDiff } from './filterDiff.js'

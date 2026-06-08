@@ -7,9 +7,10 @@
  *   3. run the LLM loop
  *   4. close any MCP connections
  *
- * This is the one execution path every substrate shares. Patterns 1 & 2 call
- * `agent.run()` directly; Pattern 3 wraps it: `task(agent.name, ({input}) =>
- * agent.run(input, ctx))`. No Render coupling lives here.
+ * This is the one execution path every substrate shares. naive-agent and
+ * worker-agents call `agent.run()` directly; workflow-agents wraps it:
+ * `task(agent.name, ({input}) => agent.run(input, ctx))`. No Render coupling
+ * lives here.
  */
 import { runLoop } from './loop.js'
 import { resolveClient } from './model.js'

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Pattern 1 — the code-review agent running in-process inside a single web service.",
+  "description": "naive-agent — the code-review agent running in-process inside a single web service.",
   "scripts": {
     "dev": "node --env-file-if-exists=.env --import tsx src/server.ts",
     "start": "node --import tsx src/server.ts",

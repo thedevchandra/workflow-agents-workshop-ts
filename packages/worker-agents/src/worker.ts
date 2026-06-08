@@ -1,12 +1,12 @@
 /**
- * Pattern 2 — Background Worker (consumer).
+ * worker-agents — background worker (consumer).
  *
  * Pulls review jobs off the Valkey stream and runs the *exact same* runReview()
- * as Pattern 1 — the only change is where it runs. Progress is published over
+ * as naive-agent — the only change is where it runs. Progress is published over
  * pub/sub so the web tier can stream it live. Run several of these to scale out;
  * Render scales a Background Worker independently of the web service.
  *
- * Note what we're hand-rolling here that Pattern 3 (Workflows) gives for free:
+ * Note what we're hand-rolling here that workflow-agents (Render Workflows) gives for free:
  * the queue, consumer groups, acks, retry-on-failure, and progress plumbing.
  */
 import { runReview } from '@workshop/agent'

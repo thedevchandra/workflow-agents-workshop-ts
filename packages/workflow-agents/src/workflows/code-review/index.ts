@@ -4,7 +4,7 @@
  * Importing this module registers the `code-review` task *and* one task per
  * shared agent (the top-level `agentTask(...)` calls). Inside the task body,
  * `prepareDiff` runs in-process and each reviewer runs as its own chained Render
- * task via `Promise.all` — the same fan-out as Patterns 1 & 2, but each agent in
+ * task via `Promise.all` — the same fan-out as naive-agent and worker-agents, but each agent in
  * its own isolated instance.
  *
  * The agents themselves come from @workshop/agent — identical to the ones the

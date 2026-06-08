@@ -1,12 +1,15 @@
-# Pattern 2 — Worker agents
+# worker-agents
 
-The same agent, **offloaded to background workers** via a Valkey queue.
+The same agent, **offloaded to background workers** through a Valkey queue. The web
+tier returns instantly; the review runs out-of-band.
+
+> Guided walkthrough: [docs/02-worker-agents.md](../../docs/02-worker-agents.md)
 
 ```
 browser ─POST /api/reviews─▶ web (producer)
                                └─ create review, XADD job to Valkey, return 202
 Valkey stream ──▶ worker (consumer)   [run N of these to scale out]
-                    └─ runReview()  ← identical to Pattern 1
+                    └─ runReview()  ← identical to naive-agent
                     └─ publish progress (pub/sub) ──▶ web ──SSE──▶ browser
                     └─ write telemetry to Postgres
 ```
@@ -17,8 +20,8 @@ Valkey stream ──▶ worker (consumer)   [run N of these to scale out]
   (`numInstances`); a web redeploy doesn't kill in-flight runs; failed jobs stay
   un-acked and retry.
 - **What you now own:** the queue, the consumer group, acks, retry semantics, and
-  the progress plumbing. That hand-rolled coordination is exactly what Pattern 3
-  removes.
+  the progress plumbing. That hand-rolled coordination is exactly what
+  `workflow-agents` removes.
 
 ## Run locally
 

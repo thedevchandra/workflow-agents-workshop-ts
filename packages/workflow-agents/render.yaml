@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://render.com/schema/render.yaml.json
 #
-# Pattern 3 — Workflow agents. Web host (Hono) + managed Postgres.
+# workflow-agents. Web host (Hono) + managed Postgres.
 # Deploy from the repo root (rootDir: ../..) so the npm workspaces resolve.
 #
 # The Workflow *worker* (which runs the registered tasks) is created separately

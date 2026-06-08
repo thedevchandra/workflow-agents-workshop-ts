@@ -1,11 +1,9 @@
 # 04 — Author a task (the hands-on finale)
 
-Everything so far led here. You've seen the same agent run three ways; now you
-write the thing that made Pattern 3 so much smaller than Pattern 2: **a task.**
-
-The goal isn't to write agents or markdown — it's to feel how a Render task turns
-a plain async function into a durable, retried, isolated, observable step with a
-few lines of config.
+> This is the half where coding agents come out. Point yours at the `YOUR TURN`
+> block below and let it build on the task — the API is small enough that an agent
+> reasons about it trivially. (In Session 1 you hand-wrote the worker's acks; here
+> the goal is to feel how agent-native this is.)
 
 ## Anatomy of a task
 
@@ -116,5 +114,7 @@ to [`code-review/index.ts`](../packages/workflow-agents/src/workflows/code-revie
 ## The takeaway
 
 You added durable, retried, isolated, traced, parallel execution by writing a
-plain function and a config object. In Pattern 2 that was a queue, a consumer
-group, acks, retries, and a pub/sub bus. 
+plain function and a config object. In worker-agents that same set of guarantees took
+a queue, a consumer group, acks, retries, and a pub/sub bus — all code you had to
+own and debug. That is the whole arc of the workshop: the agent never changed;
+the substrate did all the work.

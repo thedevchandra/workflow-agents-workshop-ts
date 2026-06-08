@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Pattern 2 — the same agent, offloaded to background workers via a Valkey queue.",
+  "description": "worker-agents — the same agent, offloaded to background workers via a Valkey queue.",
   "scripts": {
     "web": "node --env-file-if-exists=.env --import tsx src/web.ts",
     "worker": "node --env-file-if-exists=.env --import tsx src/worker.ts",

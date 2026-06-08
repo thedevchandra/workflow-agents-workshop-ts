@@ -33,7 +33,7 @@ see reviewer findings and the agent spans (LLM turns + tool calls).
 - **Postgres** — the durable telemetry record the UI reads.
 - One Blueprint (`render.yaml`) wires both together.
 
-## Where it breaks (motivation for Pattern 2)
+## Where it breaks (motivation for worker-agents)
 
 - The review runs **inside the request**. A large PR or a slow model can blow past
   HTTP/proxy timeouts.

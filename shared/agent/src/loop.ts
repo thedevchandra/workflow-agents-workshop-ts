@@ -1,8 +1,7 @@
 /**
- * The agent loop — a minimal, dependency-free implementation (lifted from
- * agent-orchestrator). Pure over (model, systemPrompt, tools, messages): it never
- * branches on where a tool came from. State lives in memory for the run;
- * durability is the host's concern.
+ * The agent loop — a minimal, dependency-free implementation. Pure over (model,
+ * systemPrompt, tools, messages): it never branches on where a tool came from.
+ * State lives in memory for the run; durability is the substrate's concern.
  */
 import type {
   AgentInput,

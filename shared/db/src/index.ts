@@ -3,7 +3,7 @@
  * UI reads, and the span sink the agent loop writes through.
  *
  * Backend selection is automatic:
- *   - DATABASE_URL set  → Postgres (durable; required for multi-process Pattern 2)
+ *   - DATABASE_URL set  → Postgres (durable; required for multi-process worker-agents)
  *   - DATABASE_URL unset → in-memory (keyless, zero-setup local dev)
  *
  * The public functions below have the same shape regardless of backend. The pg

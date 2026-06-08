@@ -1,17 +1,17 @@
 /**
- * Valkey (Redis-compatible) plumbing — local to Pattern 2 (the only pattern that
+ * Valkey (Redis-compatible) plumbing — local to worker-agents (the only one that
  * needs a queue).
  *
  *   - a work queue on a Redis Stream (XADD / XREADGROUP / XACK)
  *   - live progress over pub/sub (PUBLISH / SUBSCRIBE)
  *
  * This is exactly the coordination layer that Render Workflows makes disappear
- * in Pattern 3 — here you own the stream, the consumer group, and the acks.
+ * in workflow-agents — here you own the stream, the consumer group, and the acks.
  */
 import { Redis } from 'ioredis'
 
-const STREAM = 'reviews:queue'
-const GROUP = 'reviewers'
+export const STREAM = 'reviews:queue'
+export const GROUP = 'reviewers'
 
 export interface ReviewJob {
   reviewId: string
@@ -36,7 +36,7 @@ export async function enqueueReview(job: ReviewJob): Promise<void> {
   await getRedis().xadd(STREAM, '*', 'reviewId', job.reviewId, 'prUrl', job.prUrl)
 }
 
-async function ensureGroup(client: Redis): Promise<void> {
+export async function ensureGroup(client: Redis): Promise<void> {
   try {
     await client.xgroup('CREATE', STREAM, GROUP, '$', 'MKSTREAM')
   } catch (err) {
@@ -45,15 +45,46 @@ async function ensureGroup(client: Redis): Promise<void> {
   }
 }
 
+/**
+ * ┌─ WORKSHOP EXERCISE ─────────────────────────────────────────────────────┐
+ * Handle ONE delivered stream entry: run the handler, then decide whether to
+ * acknowledge the message. This is the hand-rolled "retry" that Render
+ * Workflows gives you for free in Session 2 — so it's worth writing once.
+ *
+ * The contract:
+ *   - On success → ACK the message so the consumer group never redelivers it.
+ *   - On failure (the handler throws) → DO NOT ack. Log it and return so the
+ *     message stays in the group's pending list and gets retried later.
+ *     Do not let the error escape — that would kill the consumer loop.
+ *
+ * Steps:
+ *   1. Parse the entry into a job:        const job = fieldsToJob(fields)
+ *   2. Run the work:                      if (job) await handler(job)
+ *   3. Acknowledge on success:            await client.xack(STREAM, GROUP, id)
+ *   4. Wrap 2–3 in try/catch; in catch, log and return WITHOUT acking.
+ *
+ * Verify with:  REDIS_URL=redis://127.0.0.1:6379 npm run test:worker
+ * Solution:     docs/02-worker-agents.md
+ * └─────────────────────────────────────────────────────────────────────────┘
+ */
+export async function processEntry(
+  client: Redis,
+  id: string,
+  fields: string[],
+  handler: (job: ReviewJob) => Promise<void>,
+): Promise<void> {
+  // YOUR TURN — replace this throw with the ack semantics described above.
+  throw new Error('Exercise: implement processEntry (see docs/02-worker-agents.md)')
+}
+
 export interface ConsumeOptions {
   consumerName?: string
   signal?: AbortSignal
 }
 
 /**
- * Blocking consumer loop. Reads one job at a time, runs the handler, and acks on
- * success. A failed handler leaves the message un-acked (visible in the pending
- * list) so it can be retried — the hand-rolled version of Pattern 3's retries.
+ * Blocking consumer loop. Reads one job at a time and hands each delivered entry
+ * to `processEntry`, which runs the handler and acks on success.
  */
 export async function consumeReviews(
   handler: (job: ReviewJob) => Promise<void>,
@@ -81,13 +112,7 @@ export async function consumeReviews(
 
     for (const [, entries] of response) {
       for (const [id, fields] of entries) {
-        const job = fieldsToJob(fields)
-        try {
-          if (job) await handler(job)
-          await client.xack(STREAM, GROUP, id)
-        } catch (err) {
-          console.error('[kv] handler failed, leaving message un-acked for retry:', err)
-        }
+        await processEntry(client, id, fields, handler)
       }
     }
   }

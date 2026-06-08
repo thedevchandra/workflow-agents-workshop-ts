@@ -3,7 +3,7 @@
  * APIs it polls. The host app supplies the write path (POST /api/reviews) and
  * mounts this at the root:
  *
- *   app.route('/', createUiRouter('Naive agent'))
+ *   app.route('/', createUiRouter('naive-agent'))
  */
 import { Hono } from 'hono'
 import { getFindings, getReview, getSpans, listReviews } from '@workshop/db'

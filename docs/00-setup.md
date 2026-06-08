@@ -3,8 +3,8 @@
 ## Prerequisites
 
 - Node.js >= 22.12
-- PostgreSQL (local) for Patterns 1 & 2
-- Redis or Valkey (local) for Pattern 2
+- PostgreSQL (local) for naive-agent and worker-agents
+- Redis or Valkey (local) for worker-agents
 - A [Render](https://render.com) account for deploys
 - *(optional)* `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` — without one, the agent
   uses a deterministic **mock** model so everything still runs
@@ -13,7 +13,7 @@
 
 ```sh
 git clone <this repo>
-cd localhost
+cd workflow-agents-workshop
 npm install            # installs every workspace
 ```
 
@@ -24,7 +24,7 @@ npm install            # installs every workspace
 createdb agents_workshop
 # or point DATABASE_URL at any Postgres you have
 
-# Redis / Valkey (Pattern 2 only)
+# Redis / Valkey (worker-agents only)
 redis-server &
 # or: docker run -p 6379:6379 redis
 ```
@@ -42,12 +42,12 @@ Key vars:
 
 | Var | Used by | Notes |
 | --- | --- | --- |
-| `DATABASE_URL` | P1, P2 | Postgres connection string |
-| `REDIS_URL` | P2 | defaults to `redis://127.0.0.1:6379` |
+| `DATABASE_URL` | naive-agent, worker-agents | Postgres connection string |
+| `REDIS_URL` | worker-agents | defaults to `redis://127.0.0.1:6379` |
 | `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` | all | optional; mock model if absent |
 | `AGENT_MODEL=mock` | all | force the mock model even with a key |
 | `GITHUB_TOKEN` | all | optional; raises GitHub rate limits |
-| `PORT` | P1, P2 web | defaults to 3000 |
+| `PORT` | naive-agent, worker-agents web | defaults to 3000 |
 
 ## A demo PR
 

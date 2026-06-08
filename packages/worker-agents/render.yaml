@@ -1,4 +1,4 @@
-# Pattern 2 — Worker agents. Web + Background Worker + Valkey + Postgres.
+# worker-agents. Web + Background Worker + Valkey + Postgres.
 # Deploy from the repo root (rootDir: ../..) so the npm workspaces resolve.
 
 databases:

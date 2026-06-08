@@ -1,7 +1,7 @@
 /**
- * Fetch per-file patches from a GitHub pull request (lifted from
- * agent-orchestrator). Works with public repos without authentication; a
- * GITHUB_TOKEN raises rate limits and unlocks private repos.
+ * Fetch per-file patches from a GitHub pull request. Works with public repos
+ * without authentication; a GITHUB_TOKEN raises rate limits and unlocks private
+ * repos.
  */
 
 export interface PullRequest {

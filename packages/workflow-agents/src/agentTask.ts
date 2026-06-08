@@ -1,7 +1,7 @@
 /**
  * Wrap a shared Agent as a Render Workflow task.
  *
- * This is the *entire* difference between Pattern 3 and Patterns 1 & 2: instead
+ * This is the *entire* difference between workflow-agents and naive-agent/worker-agents: instead
  * of calling `agent.run(input)` in-process, we register `agent.run` as a
  * `task()`. Each call then runs in its own isolated Render instance with
  * per-task retries, timeouts, and traces — for free.

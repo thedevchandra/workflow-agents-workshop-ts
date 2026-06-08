@@ -1,6 +1,9 @@
-# Pattern 1 — Naive agent
+# naive-agent
 
-The code-review agent running **in-process** inside a single web service.
+The code-review agent running **in-process**, inside a single web service — the
+baseline the rest of the workshop improves on.
+
+> Guided walkthrough: [docs/01-naive-agent.md](../../docs/01-naive-agent.md)
 
 ```
 browser ──POST /api/reviews──▶ web service
@@ -14,7 +17,7 @@ browser ──POST /api/reviews──▶ web service
 - **Why it's here:** establishes the baseline. It works and it's simple.
 - **Where it breaks:** the review runs *inside the HTTP request*. Long PRs block
   the request and risk timeouts; a redeploy kills in-flight reviews; concurrent
-  users contend for one process. That pain motivates Pattern 2.
+  users contend for one process. 
 
 ## Run locally
 

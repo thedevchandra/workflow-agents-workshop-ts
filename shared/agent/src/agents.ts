@@ -3,9 +3,9 @@
  * in-process `.run()`. No markdown, no frontmatter, no Render coupling. The
  * substrate decides how to invoke them:
  *
- *   naive    → agent.run(input)
- *   worker   → agent.run(input)            inside a queue consumer
- *   workflow → task(agent.name, ({ input }) => agent.run(input))
+ *   naive-agent     → agent.run(input)
+ *   worker-agents   → agent.run(input) inside a queue consumer
+ *   workflow-agents → task(agent.name, ({ input }) => agent.run(input))
  */
 import { defineAgent } from './agent.js'
 import { resolveModelSpec } from './model-tiers.js'

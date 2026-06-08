@@ -1,11 +1,11 @@
 /**
- * @workshop/agent — the constant core, shared by all three patterns.
+ * @workshop/agent — the shared core that all three patterns reuse unchanged.
  *
- * Reused from agent-orchestrator: the LLM loop, the model client, prepareDiff.
- * NOT reused: markdown agent parsing and the agent-as-task factory. Agents here
- * are plain data wrapped by `defineAgent` into objects with an in-process
- * `.run()`. Tools + MCP are an import-and-register registry. The substrate
- * (in-process / worker / Render task) decides how `.run()` is invoked.
+ * Agents are plain data wrapped by `defineAgent` into objects with an in-process
+ * `.run()`. Tools (and optional MCP servers) live in an import-and-register
+ * registry. The substrate decides how `.run()` is invoked — naive-agent
+ * (in-process), worker-agents (queue worker), or workflow-agents (Render task) —
+ * and the agent code never changes between them.
  */
 
 export { runReview, parseDecision } from './review.js'
