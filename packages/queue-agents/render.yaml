@@ -2,11 +2,11 @@
 # Builds from the repo root so the npm workspaces resolve.
 
 projects:
-  - name: thedevchandra-agents-workshop-queue
+  - name: devchandra-agents-workshop-queue
     environments:
       - name: production
         databases:
-          - name: thedevchandra-queue-agents-db
+          - name: devchandra-queue-agents-db
             plan: basic-256mb
             region: oregon
             postgresMajorVersion: "18"
@@ -14,7 +14,7 @@ projects:
         services:
           # Shared queue + progress bus.
           - type: keyvalue
-            name: thedevchandra-queue-agents-valkey
+            name: devchandra-queue-agents-valkey
             plan: starter
             region: oregon
             maxmemoryPolicy: noeviction
@@ -22,7 +22,7 @@ projects:
 
           # Producer: enqueues jobs, serves the UI, streams progress.
           - type: web
-            name: thedevchandra-queue-agents-web
+            name: devchandra-queue-agents-web
             runtime: node
             region: oregon
             plan: starter
@@ -32,11 +32,11 @@ projects:
             envVars:
               - key: DATABASE_URL
                 fromDatabase:
-                  name: thedevchandra-queue-agents-db
+                  name: devchandra-queue-agents-db
                   property: connectionString
               - key: VALKEY_URL
                 fromService:
-                  name: thedevchandra-queue-agents-valkey
+                  name: devchandra-queue-agents-valkey
                   type: keyvalue
                   property: connectionString
               - key: ANTHROPIC_API_KEY
@@ -50,7 +50,7 @@ projects:
 
           # Consumer: runs the agent. Scale `numInstances` up to fan out across PRs.
           - type: worker
-            name: thedevchandra-queue-agents-worker
+            name: devchandra-queue-agents-worker
             runtime: node
             region: oregon
             plan: starter
@@ -60,11 +60,11 @@ projects:
             envVars:
               - key: DATABASE_URL
                 fromDatabase:
-                  name: thedevchandra-queue-agents-db
+                  name: devchandra-queue-agents-db
                   property: connectionString
               - key: VALKEY_URL
                 fromService:
-                  name: thedevchandra-queue-agents-valkey
+                  name: devchandra-queue-agents-valkey
                   type: keyvalue
                   property: connectionString
               - key: ANTHROPIC_API_KEY
