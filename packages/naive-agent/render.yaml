@@ -2,18 +2,18 @@
 # Builds from the repo root so the npm workspaces resolve.
 
 projects:
-  - name: thedevchandra-agents-workshop-naive
+  - name: devchandra-agents-workshop-naive
     environments:
       - name: production
         databases:
-          - name: thedevchandra-naive-agent-db
+          - name: devchandra-naive-agent-db
             plan: basic-256mb
             region: oregon
             postgresMajorVersion: "18"
 
         services:
           - type: web
-            name: thedevchandra-naive-agent
+            name: devchandra-naive-agent
             runtime: node
             region: oregon
             plan: starter
@@ -23,7 +23,7 @@ projects:
             envVars:
               - key: DATABASE_URL
                 fromDatabase:
-                  name: thedevchandra-naive-agent-db
+                  name: devchandra-naive-agent-db
                   property: connectionString
               - key: ANTHROPIC_API_KEY
                 sync: false
