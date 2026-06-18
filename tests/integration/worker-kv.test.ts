@@ -12,6 +12,7 @@ import { Redis } from 'ioredis'
 import {
   GROUP,
   STREAM,
+  consumeReviews,
   ensureGroup,
   enqueueReview,
   processEntry,
@@ -112,5 +113,45 @@ describe('kv.processEntry ack semantics', { skip: !VALKEY_URL }, () => {
     assert.equal(claimed, 1) // the pending entry was reclaimed
     assert.equal(redelivered, true) // and actually re-processed
     assert.equal(await pendingCount(), 0) // success → acked → no longer pending
+  })
+
+  it('delivers jobs that were queued before the consumer group existed', async () => {
+    await client.del(STREAM)
+    await enqueueReview({ reviewId: 'r-before-worker', prUrl: 'https://github.com/o/r/pull/4' })
+    await ensureGroup(client)
+
+    const entry = await readOne('late-worker')
+
+    assert.ok(entry, 'expected an entry queued before group creation to be delivered')
+    await processEntry(client, entry.id, entry.fields, async (job) => {
+      assert.equal(job.reviewId, 'r-before-worker')
+    })
+    assert.equal(await pendingCount(), 0)
+  })
+
+  it('keeps consuming after the stream and group are recreated', async () => {
+    await client.del(STREAM)
+    await ensureGroup(client)
+
+    const controller = new AbortController()
+    let loop!: Promise<void>
+    const targetReviewId = 'r-after-recreate'
+    const handled = new Promise<string>((resolve) => {
+      loop = consumeReviews(
+        async (job) => {
+          if (job.reviewId !== targetReviewId) return
+          resolve(job.reviewId)
+          controller.abort()
+        },
+        { consumerName: 'recreated-group-worker', signal: controller.signal },
+      )
+    })
+
+    await new Promise((resolve) => setTimeout(resolve, 25))
+    await client.del(STREAM)
+    await enqueueReview({ reviewId: targetReviewId, prUrl: 'https://github.com/o/r/pull/5' })
+
+    assert.equal(await handled, targetReviewId)
+    await loop
   })
 })

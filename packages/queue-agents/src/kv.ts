@@ -54,11 +54,15 @@ export async function enqueueReview(job: ReviewJob): Promise<void> {
 
 export async function ensureGroup(client: Redis): Promise<void> {
   try {
-    await client.xgroup('CREATE', STREAM, GROUP, '$', 'MKSTREAM')
+    await client.xgroup('CREATE', STREAM, GROUP, '0', 'MKSTREAM')
   } catch (err) {
     // BUSYGROUP = group already exists; anything else is real.
     if (!(err instanceof Error) || !err.message.includes('BUSYGROUP')) throw err
   }
+}
+
+function isNoGroupError(err: unknown): boolean {
+  return err instanceof Error && err.message.includes('NOGROUP')
 }
 
 /**
@@ -153,21 +157,32 @@ export async function consumeReviews(
       consumerName: consumer,
       minIdleMs: reclaimIdleMs,
     }).catch((err) => {
+      if (isNoGroupError(err)) return ensureGroup(client)
       console.error('[queue-agents:worker] reclaim failed:', err)
     })
 
-    const response = (await client.xreadgroup(
-      'GROUP',
-      GROUP,
-      consumer,
-      'COUNT',
-      1,
-      'BLOCK',
-      5000,
-      'STREAMS',
-      STREAM,
-      '>',
-    )) as Array<[string, Array<[string, string[]]>]> | null
+    let response: Array<[string, Array<[string, string[]]>]> | null
+    try {
+      response = (await client.xreadgroup(
+        'GROUP',
+        GROUP,
+        consumer,
+        'COUNT',
+        1,
+        'BLOCK',
+        5000,
+        'STREAMS',
+        STREAM,
+        '>',
+      )) as Array<[string, Array<[string, string[]]>]> | null
+    } catch (err) {
+      if (isNoGroupError(err)) {
+        await ensureGroup(client)
+        continue
+      }
+      console.error('[queue-agents:worker] read failed:', err)
+      continue
+    }
 
     if (!response) continue
 
